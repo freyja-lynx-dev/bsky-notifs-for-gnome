@@ -1,0 +1,8 @@
+{
+  "name": "Bluesky Notifications for GNOME",
+  "description": "A notifications agent for Bluesky Social",
+  "uuid": "bsky-notifs-for-gnome@freyja-lynx.dev",
+  "url": "https://github.com/freyja-lynx-dev/bsky-notifs-for-gnome",
+  "settings-schema": "org.gnome.shell.extensions.bsky-notifs-for-gnome",
+  "shell-version": ["47"]
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<schemalist>
+  <schema
+        id="org.gnome.shell.extensions.bsky-notifs-for-gnome"
+        path="/org/gnome/shell/extensions/bsky-notifs-for-gnome/"
+    >
+    <key name="test" type="i">
+      <default>5</default>
+      <summary>filler</summary>
+      <description>placeholder setting for the schema</description>
+    </key>
+  </schema>
+</schemalist>

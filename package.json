@@ -1,0 +1,27 @@
+{
+  "name": "bsky-notifs-for-gnome",
+  "version": "0.1.0",
+  "description": "A notifications agent for Bluesky Social",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/freyja-lynx-dev/bsky-notifs-for-gnome.git"
+  },
+  "author": "freyja-lynx-dev",
+  "license": "LGPL-2.1-or-later",
+  "bugs": {
+    "url": "https://github.com/freyja-lynx-dev/bsky-notifs-for-gnome/issues"
+  },
+  "homepage": "https://github.com/freyja-lynx-dev/bsky-notifs-for-gnome#readme",
+  "sideEffects": false,
+  "devDependencies": {
+    "eslint": "^9.16.0",
+    "eslint-plugin-jsdoc": "^50.6.1",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@girs/gjs": "^4.0.0-beta.19",
+    "@girs/gnome-shell": "^47.0.0"
+  }
+}
