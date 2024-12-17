@@ -28,3 +28,6 @@ install: $(NAME).zip
 
 clean:
 	@rm -rf dist node_modules $(NAME).zip
+
+test:
+	dbus-run-session -- gnome-shell --nested --wayland

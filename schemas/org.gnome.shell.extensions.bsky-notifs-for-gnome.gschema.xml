@@ -4,10 +4,35 @@
         id="org.gnome.shell.extensions.bsky-notifs-for-gnome"
         path="/org/gnome/shell/extensions/bsky-notifs-for-gnome/"
     >
-    <key name="test" type="i">
-      <default>5</default>
-      <summary>filler</summary>
-      <description>placeholder setting for the schema</description>
+    <key name="maxnotifications" type="i">
+      <default>50</default>
+      <summary>The amount of notifications to show at once</summary>
+      <description
+            >The amount of notifications to show at once. You can have up to 100 notifications pulled at once.</description>
+    </key>
+    <key name="checkintervalminutes" type="i">
+      <default>30</default>
+      <summary>The interval to check for new notifications</summary>
+      <description
+            >The interval to check for new notifications. You can have up to 1440 minutes (24 hours) between checks.</description>
+    </key>
+    <key name="identifier" type="s">
+      <default>""</default>
+      <summary>The identifier for your Bluesky account</summary>
+      <description>The identifier for your Bluesky account.</description>
+    </key>
+    <key name="apppassword" type="s">
+      <default>""</default>
+      <summary>The app password for your Bluesky account</summary>
+      <description
+            >Your app password. WE SHOULD BE USING OAUTH FOR THIS.</description>
+    </key>
+    <key name="prioritynotifications" type="b">
+      <default>false</default>
+      <summary
+            >Whether to only receive notifications from users you follow</summary>
+      <description
+            >When enabled, you will only receive reply and quote notifications from users you follow.</description>
     </key>
   </schema>
 </schemalist>
