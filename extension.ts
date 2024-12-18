@@ -7,7 +7,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 import * as API from "./api.js";
 
-export default class MyExtension extends Extension {
+export default class BlueskyNotifsForGnome extends Extension {
   gsettings?: Gio.Settings;
   identifier: string = "";
   appPassword: string = "";
@@ -15,6 +15,7 @@ export default class MyExtension extends Extension {
   maxNotifications: number = 50;
   priorityNotifications: boolean = false;
   did: string = "";
+  didDocument: object = {};
 
   enable() {
     this.gsettings = this.getSettings();
@@ -42,7 +43,7 @@ export default class MyExtension extends Extension {
     API.getDidDocument(this.did, session)
       .then((didDocObj) => {
         if (API.isDidDocument(didDocObj)) {
-          console.log(didDocObj);
+          this.didDocument = didDocObj;
         }
       })
       .catch((error) => {

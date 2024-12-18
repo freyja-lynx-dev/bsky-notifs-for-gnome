@@ -61,6 +61,36 @@ export function resolveHandleToDid(
   });
 }
 
+interface DidDocumentVerificationMethod {
+  id: string;
+  type: string;
+  controller: string;
+  publicKeyMultibase: string;
+}
+
+function isDidDocumentVerificationMethod(
+  obj: any,
+): obj is DidDocumentVerificationMethod {
+  const hasId = obj.id !== undefined;
+  const hasType = obj.type !== undefined;
+  const hasController = obj.controller !== undefined;
+  const hasPublicKeyMultibase = obj.publicKeyMultibase !== undefined;
+  return hasId && hasType && hasController && hasPublicKeyMultibase;
+}
+
+interface DidDocumentService {
+  id: string;
+  type: string;
+  serviceEndpoint: string;
+}
+
+function isDidDocumentService(obj: any): obj is DidDocumentService {
+  const hasId = obj.id !== undefined;
+  const hasType = obj.type !== undefined;
+  const hasServiceEndpoint = obj.serviceEndpoint !== undefined;
+  return hasId && hasType && hasServiceEndpoint;
+}
+
 interface DidDocument {
   id: string;
   alsoKnownAs: string[];
@@ -72,8 +102,21 @@ export function isDidDocument(obj: any): obj is DidDocument {
   const hasId = obj.id !== undefined;
   const hasAlsoKnownAs = obj.alsoKnownAs !== undefined;
   const hasVerificationMethod = obj.verificationMethod !== undefined;
+  let properVerificationMethods = false;
+  obj.verificationMethod.forEach((verificationMethod: any) => {
+    properVerificationMethods =
+      isDidDocumentVerificationMethod(verificationMethod);
+  });
   const hasService = obj.service !== undefined;
-  return hasId && hasAlsoKnownAs && hasVerificationMethod && hasService;
+  let properServices = false;
+  return (
+    hasId &&
+    hasAlsoKnownAs &&
+    hasVerificationMethod &&
+    hasService &&
+    properVerificationMethods &&
+    properServices
+  );
 }
 
 export function getDidDocument(
