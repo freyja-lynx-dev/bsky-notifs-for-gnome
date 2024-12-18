@@ -2,10 +2,10 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import Meta from "gi://Meta";
 import Shell from "gi://Shell";
-import Soup from "@girs/soup-3.0";
+import Soup from "gi://Soup";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-//import { XRPC, CredentialManager } from "@atcute/client";
+import * as API from "./api.js";
 
 export default class MyExtension extends Extension {
   gsettings?: Gio.Settings;
@@ -14,6 +14,7 @@ export default class MyExtension extends Extension {
   checkIntervalMinutes: number = 30;
   maxNotifications: number = 50;
   priorityNotifications: boolean = false;
+  did: string = "";
 
   enable() {
     this.gsettings = this.getSettings();
@@ -24,6 +25,22 @@ export default class MyExtension extends Extension {
     this.priorityNotifications = this.gsettings!.get_boolean(
       "prioritynotifications",
     );
+    const session = new Soup.Session();
+
+    API.resolveHandleToDid(this.identifier, session)
+      .then((didObj) => {
+        if (API.isComAtprotoIdentityResolveHandle(didObj)) {
+          this.did = didObj.did;
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    console.log("this.did: " + this.did);
+    // resolve handle to DID
+    // resolve DID to DID document to obtain PDS
+    // get auth token from PDS
+    // get notifications from PDS
   }
 
   disable() {

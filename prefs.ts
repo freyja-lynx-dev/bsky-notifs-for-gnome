@@ -5,7 +5,6 @@ import {
   ExtensionPreferences,
   gettext as _,
 } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-import { MaxWidthBox } from "resource:///org/gnome/shell/ui/search.js";
 
 export default class GnomeRectanglePreferences extends ExtensionPreferences {
   _settings?: Gio.Settings;
