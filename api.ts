@@ -109,6 +109,9 @@ export function isDidDocument(obj: any): obj is DidDocument {
   });
   const hasService = obj.service !== undefined;
   let properServices = false;
+  obj.service.forEach((service: any) => {
+    properServices = isDidDocumentService(service);
+  });
   return (
     hasId &&
     hasAlsoKnownAs &&
