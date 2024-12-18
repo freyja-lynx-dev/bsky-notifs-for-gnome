@@ -25,12 +25,12 @@ function load_json_async(
   );
 }
 // https://docs.bsky.app/docs/api/com-atproto-identity-resolve-handle
-interface comAtprotoIdentityResolveHandle {
+interface ComAtprotoIdentityResolveHandle {
   did: string;
 }
 export function isComAtprotoIdentityResolveHandle(
   obj: any,
-): obj is comAtprotoIdentityResolveHandle {
+): obj is ComAtprotoIdentityResolveHandle {
   return obj.did !== undefined;
 }
 export function resolveHandleToDid(
@@ -58,5 +58,40 @@ export function resolveHandleToDid(
         }
       },
     );
+  });
+}
+
+interface DidDocument {
+  id: string;
+  alsoKnownAs: string[];
+  verificationMethod: object[];
+  service: object[];
+}
+
+export function isDidDocument(obj: any): obj is DidDocument {
+  const hasId = obj.id !== undefined;
+  const hasAlsoKnownAs = obj.alsoKnownAs !== undefined;
+  const hasVerificationMethod = obj.verificationMethod !== undefined;
+  const hasService = obj.service !== undefined;
+  return hasId && hasAlsoKnownAs && hasVerificationMethod && hasService;
+}
+
+export function getDidDocument(
+  did: string,
+  session: Soup.Session,
+): Promise<JSON> {
+  const message: Soup.Message = Soup.Message.new(
+    "GET",
+    "https://plc.directory/" + did,
+  );
+
+  return new Promise((resolve, reject) => {
+    load_json_async(session, message, "getDidDocument", (data: any) => {
+      if (!data.error) {
+        resolve(data);
+      } else {
+        reject(data);
+      }
+    });
   });
 }

@@ -27,6 +27,7 @@ export default class MyExtension extends Extension {
     );
     const session = new Soup.Session();
 
+    // resolve handle to DID
     API.resolveHandleToDid(this.identifier, session)
       .then((didObj) => {
         if (API.isComAtprotoIdentityResolveHandle(didObj)) {
@@ -37,8 +38,16 @@ export default class MyExtension extends Extension {
         console.log(error);
       });
     console.log("this.did: " + this.did);
-    // resolve handle to DID
     // resolve DID to DID document to obtain PDS
+    API.getDidDocument(this.did, session)
+      .then((didDocObj) => {
+        if (API.isDidDocument(didDocObj)) {
+          console.log(didDocObj);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     // get auth token from PDS
     // get notifications from PDS
   }
