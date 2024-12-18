@@ -6,6 +6,7 @@ import Soup from "gi://Soup";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 import * as API from "./api.js";
+import * as AT from "./types.js";
 
 export default class BlueskyNotifsForGnome extends Extension {
   gsettings?: Gio.Settings;
@@ -15,9 +16,15 @@ export default class BlueskyNotifsForGnome extends Extension {
   maxNotifications: number = 50;
   priorityNotifications: boolean = false;
   did: string = "";
-  didDocument: object = {};
+  didDocument: AT.DidDocument = {
+    id: "",
+    alsoKnownAs: Array<string>(),
+    verificationMethod: Array<AT.DidDocumentVerificationMethod>(),
+    service: Array<AT.DidDocumentService>(),
+  };
+  pds: string = "";
 
-  enable() {
+  async enable() {
     this.gsettings = this.getSettings();
     this.identifier = this.gsettings!.get_string("identifier");
     this.appPassword = this.gsettings!.get_string("apppassword");
@@ -29,26 +36,27 @@ export default class BlueskyNotifsForGnome extends Extension {
     const session = new Soup.Session();
 
     // resolve handle to DID
-    API.resolveHandleToDid(this.identifier, session)
+    await API.resolveHandleToDid(this.identifier, session)
       .then((didObj) => {
-        if (API.isComAtprotoIdentityResolveHandle(didObj)) {
-          this.did = didObj.did;
-        }
+        this.did = didObj.did;
       })
       .catch((error) => {
         console.log(error);
       });
     console.log("this.did: " + this.did);
     // resolve DID to DID document to obtain PDS
-    API.getDidDocument(this.did, session)
+    await API.getDidDocument(this.did, session)
       .then((didDocObj) => {
-        if (API.isDidDocument(didDocObj)) {
-          this.didDocument = didDocObj;
-        }
+        this.didDocument = didDocObj;
+        // we're just assuming the first one is the correct one
+        // not really sure if you'll ever get multiple? or what that means?
+        this.pds = didDocObj.service[0].serviceEndpoint;
       })
       .catch((error) => {
         console.log(error);
       });
+    console.log("didDocument: " + JSON.stringify(this.didDocument));
+    console.log("pds: " + this.pds);
     // get auth token from PDS
     // get notifications from PDS
   }
