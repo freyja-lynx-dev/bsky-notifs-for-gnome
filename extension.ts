@@ -62,7 +62,7 @@ export default class BlueskyNotifsForGnome extends Extension {
         this.did = didObj.did;
       })
       .catch((error) => {
-        console.log(error);
+        throw new Error("resolveHandleToDid error: " + JSON.stringify(error));
       });
     console.log("this.did: " + this.did);
     // resolve DID to DID document to obtain PDS
@@ -72,7 +72,7 @@ export default class BlueskyNotifsForGnome extends Extension {
         this.pds = API.getAtprotoPdsFromService(didDocObj);
       })
       .catch((error) => {
-        console.log(error);
+        throw new Error("getDidDocument error: " + JSON.stringify(error));
       });
     console.log("didDocument: " + JSON.stringify(this.didDocument));
     console.log("pds: " + this.pds);
@@ -87,7 +87,7 @@ export default class BlueskyNotifsForGnome extends Extension {
       this.identifier,
       this.appPassword,
     ).catch((error) => {
-      console.log("createSession error: " + JSON.stringify(error));
+      throw new Error("createSession error: " + JSON.stringify(error));
     });
     console.log(JSON.stringify(atpSession));
     // get notifications from PDS
