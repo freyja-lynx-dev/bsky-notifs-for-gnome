@@ -69,9 +69,7 @@ export default class BlueskyNotifsForGnome extends Extension {
     await API.getDidDocument(this.did, session)
       .then((didDocObj) => {
         this.didDocument = didDocObj;
-        // we're just assuming the first one is the correct one
-        // not really sure if you'll ever get multiple? or what that means?
-        this.pds = didDocObj.service[0].serviceEndpoint;
+        this.pds = API.getAtprotoPdsFromService(didDocObj);
       })
       .catch((error) => {
         console.log(error);

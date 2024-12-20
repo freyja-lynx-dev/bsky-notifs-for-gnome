@@ -93,6 +93,16 @@ export async function getDidDocument(
   });
 }
 
+export function getAtprotoPdsFromService(didDoc: AT.DidDocument): string {
+  const service = didDoc.service.filter(
+    (service: AT.DidDocumentService) => service.id === "#atproto_pds",
+  );
+  if (service.length == 1) {
+    return service[0].serviceEndpoint;
+  } else {
+    throw new Error("No ATProtocol PDS found in DID document");
+  }
+}
 //https://docs.bsky.app/docs/api/com-atproto-server-create-session
 export async function createSession(
   server: string,
@@ -100,10 +110,6 @@ export async function createSession(
   handle: string,
   pass: string,
 ): Promise<AT.ComAtprotoServerCreateSession> {
-  // const params = {
-  //   identifier: handle,
-  //   password: pass,
-  // };
   const params = `{"identifier":"${handle}","password":"${pass}"}`;
   const message: Soup.Message = Soup.Message.new(
     "POST",
