@@ -5,8 +5,9 @@ import Shell from "gi://Shell";
 import Soup from "gi://Soup";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
-import * as API from "./api.js";
-import * as AT from "./types.js";
+import * as API from "./lib/api.js";
+import * as AT from "./lib/types.js";
+import * as OAuth from "./lib/oauth.js";
 
 export default class BlueskyNotifsForGnome extends Extension {
   gsettings?: Gio.Settings;
@@ -22,7 +23,12 @@ export default class BlueskyNotifsForGnome extends Extension {
     verificationMethod: Array<AT.DidDocumentVerificationMethod>(),
     service: Array<AT.DidDocumentService>(),
   };
+  // these should proably have real typed verification rather than just strings
   pds: string = "";
+  authurl: string = "";
+  tokenurl: string = "";
+  redirecturl: string = "";
+  baseurl: string = "";
 
   async enable() {
     this.gsettings = this.getSettings();
@@ -57,8 +63,11 @@ export default class BlueskyNotifsForGnome extends Extension {
       });
     console.log("didDocument: " + JSON.stringify(this.didDocument));
     console.log("pds: " + this.pds);
-    // get auth token from PDS
+    // oauth2 stuff
+    const metadata = await OAuth.resolveOauthServerMetadata(this.pds, session);
+    console.log("metadata: " + JSON.stringify(metadata));
     // get notifications from PDS
+    // send notifications to Gnome Shell
   }
 
   disable() {

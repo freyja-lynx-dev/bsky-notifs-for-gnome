@@ -3,7 +3,12 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import * as AT from "./types.js";
 
-function load_json_async(
+// this function gets the job done, but is not capable of giving
+// rich context to a failed message -- i should refactor this sometime
+// to change `responses` to `validityFunction` and allow callers to
+// provide a contextful validity check without needing this function
+// to be super complicated
+export function load_json_async(
   session: Soup.Session,
   message: Soup.Message,
   context: String,
@@ -16,7 +21,9 @@ function load_json_async(
     null,
     (session, res) => {
       if (!responses.includes(message.get_status())) {
-        throw new Error("Unexpected response from " + context);
+        throw new Error(
+          "Unexpected response from " + context + "\n" + message.get_status(),
+        );
       }
       let bytes = session!.send_and_read_finish(res);
       let decoder = new TextDecoder("utf-8");
@@ -57,13 +64,16 @@ export async function resolveHandleToDid(
   });
 }
 // https://web.plc.directory/api/redoc
+// https://w3c-ccg.github.io/did-method-web/#key-material-and-document-handling
 export async function getDidDocument(
   did: string,
   session: Soup.Session,
 ): Promise<AT.DidDocument> {
   const message: Soup.Message = Soup.Message.new(
     "GET",
-    "https://plc.directory/" + did,
+    did.startsWith("did:web")
+      ? `https://${did.split(":")[2]}/.well-known/did.json`
+      : "https://plc.directory/" + did,
   );
   return new Promise((resolve, reject) => {
     load_json_async(
