@@ -1,5 +1,11 @@
-export let CLIENT_ID: string;
-export let REDIRECT_URI: string;
+/*
+This is a very minimal, only-required-features OAuth interface for ATProto.
+Don't use this as the base for anything else. You'd be better off using either the
+reference implementation or the @atcute/oauth package depending on your needs.
+*/
+
+export let CLIENT_ID: string = "http://localhost";
+export let REDIRECT_URI: string = "http://127.0.0.1/";
 export let STORAGE_NAME = "gnome-rest-oauth";
 import Soup from "gi://Soup";
 import GLib from "gi://GLib";
@@ -79,7 +85,7 @@ export function isOauthProtectedResource(
   );
 }
 
-async function getOauthProtectedResource(
+export async function getOauthProtectedResource(
   host: string,
   session: Soup.Session,
 ): Promise<OauthProtectedResource> {
@@ -130,4 +136,37 @@ export async function resolveOauthServerMetadata(
       [Soup.Status.OK],
     );
   });
+}
+
+const state = () => {
+  let values: Uint8Array = new Uint8Array(16);
+  const decoder = new TextDecoder();
+  // this may or may not be a bad idea
+  GLib.random_set_seed(GLib.get_real_time());
+  for (let i = 0; i < 16; i++) {
+    values[i] = GLib.random_int_range(0, 255);
+  }
+
+  return decoder.decode(values);
+};
+
+// https://atproto.com/specs/oauth#clients
+export function createAuthUrl(
+  metadata: AuthServerMetadata,
+  identity: string,
+  scope: string,
+) {
+  const pkce = Rest.PkceCodeChallenge.new_random();
+
+  // we are implementing bare minimum
+  const params = {
+    client_id: CLIENT_ID,
+    response_type: "code",
+    code_challenge: pkce.get_challenge(),
+    code_challenge_method: "S256", // i can only assume this is the right one :<
+    state: state(),
+    redirect_uri: REDIRECT_URI,
+    scope: scope,
+    login_hint: identity,
+  };
 }

@@ -15,6 +15,7 @@ export function load_json_async(
   resolveFunc: Function,
   responses: Array<Soup.Status>,
 ) {
+  console.log("message: " + message.get_uri());
   session.send_and_read_async(
     message,
     GLib.PRIORITY_DEFAULT,
@@ -88,6 +89,45 @@ export async function getDidDocument(
         }
       },
       [Soup.Status.OK, Soup.Status.NOT_FOUND, Soup.Status.GONE],
+    );
+  });
+}
+
+//https://docs.bsky.app/docs/api/com-atproto-server-create-session
+export async function createSession(
+  server: string,
+  session: Soup.Session,
+  handle: string,
+  pass: string,
+): Promise<AT.ComAtprotoServerCreateSession> {
+  // const params = {
+  //   identifier: handle,
+  //   password: pass,
+  // };
+  const params = `{"identifier":"${handle}","password":"${pass}"}`;
+  const message: Soup.Message = Soup.Message.new(
+    "POST",
+    server + "/xrpc/com.atproto.server.createSession",
+  );
+  const encoder = new TextEncoder();
+  message.set_request_body_from_bytes(
+    "application/json",
+    GLib.Bytes.new(encoder.encode(params)),
+  );
+
+  return new Promise((resolve, reject) => {
+    load_json_async(
+      session,
+      message,
+      "createSession",
+      (data: any) => {
+        if (!data.error && AT.isComAtprotoServerCreateSession(data)) {
+          resolve(data as AT.ComAtprotoServerCreateSession);
+        } else {
+          reject(data as AT.ResponseError);
+        }
+      },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
     );
   });
 }

@@ -9,6 +9,20 @@ import * as API from "./lib/api.js";
 import * as AT from "./lib/types.js";
 import * as OAuth from "./lib/oauth.js";
 
+// function checkDepdendencies() {
+//   const proc = Gio.Subprocess.new(
+//     "./jwt-generator.py --dry-run"
+//   )
+// }
+
+// OAuth is not going to be implemented yet but the work we have already isn't going to be list
+// async function OAuthFlow() {
+//   // get oauth metadata from PDS's authorization server
+//   const metadata = await OAuth.resolveOauthServerMetadata(this.pds, session);
+//   console.log("metadata: " + JSON.stringify(metadata));
+//   // authorization flow
+// }
+
 export default class BlueskyNotifsForGnome extends Extension {
   gsettings?: Gio.Settings;
   identifier: string = "";
@@ -39,6 +53,7 @@ export default class BlueskyNotifsForGnome extends Extension {
     this.priorityNotifications = this.gsettings!.get_boolean(
       "prioritynotifications",
     );
+
     const session = new Soup.Session();
 
     // resolve handle to DID
@@ -63,9 +78,20 @@ export default class BlueskyNotifsForGnome extends Extension {
       });
     console.log("didDocument: " + JSON.stringify(this.didDocument));
     console.log("pds: " + this.pds);
-    // oauth2 stuff
-    const metadata = await OAuth.resolveOauthServerMetadata(this.pds, session);
-    console.log("metadata: " + JSON.stringify(metadata));
+    // create ATPSession
+    const authServer = (
+      await OAuth.getOauthProtectedResource(this.pds, session)
+    ).authorization_servers[0];
+    console.log("authServer: " + authServer);
+    let atpSession = await API.createSession(
+      authServer,
+      session,
+      this.identifier,
+      this.appPassword,
+    ).catch((error) => {
+      console.log("createSession error: " + JSON.stringify(error));
+    });
+    console.log(JSON.stringify(atpSession));
     // get notifications from PDS
     // send notifications to Gnome Shell
   }

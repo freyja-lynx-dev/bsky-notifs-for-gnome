@@ -64,3 +64,37 @@ function isDidDocumentVerificationMethod(
   const hasPublicKeyMultibase = obj.publicKeyMultibase !== undefined;
   return hasId && hasType && hasController && hasPublicKeyMultibase;
 }
+
+export type ComAtprotoServerCreateSession = {
+  accessJwt: string;
+  refreshJwt: string;
+  handle: string;
+  did: string;
+  didDoc?: DidDocument;
+  email?: string;
+  emailConfirmed?: boolean;
+  emailAuthFactor?: boolean;
+  active?: boolean;
+  status?: "takendown" | "suspended" | "deactivated";
+};
+export function isComAtprotoServerCreateSession(
+  obj: any,
+): obj is ComAtprotoServerCreateSession {
+  const hasAccessJwt = obj.accessJwt !== undefined;
+  const hasRefreshJwt = obj.refreshJwt !== undefined;
+  const hasHandle = obj.handle !== undefined;
+  const hasDid = obj.did !== undefined;
+
+  return hasAccessJwt && hasRefreshJwt && hasHandle && hasDid;
+}
+
+export type ResponseError = {
+  error: string;
+  message: string;
+};
+export function isComAtprotoError(obj: any): obj is ResponseError {
+  const hasError = obj.error !== undefined;
+  const hasMessage = obj.message !== undefined;
+
+  return hasError && hasMessage;
+}
