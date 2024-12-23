@@ -14,6 +14,7 @@ export function load_json_async(
   context: String,
   resolveFunc: Function,
   responses: Array<Soup.Status>,
+  responsesWithData: Array<Soup.Status>,
 ) {
   session.send_and_read_async(
     message,
@@ -22,17 +23,22 @@ export function load_json_async(
     (session, res) => {
       if (!responses.includes(message.get_status())) {
         throw new Error(
-          "Unexpected response from " + context + "\n" + message.get_status(),
+          `${context} unexpected response: ${message.get_status()}`,
         );
       }
-      let bytes = session!.send_and_read_finish(res);
-      let decoder = new TextDecoder("utf-8");
-      let response = decoder.decode(bytes.get_data()!);
-      let data = JSON.parse(response);
-      resolveFunc(data);
+      if (responsesWithData.includes(message.get_status())) {
+        let bytes = session!.send_and_read_finish(res);
+        let decoder = new TextDecoder("utf-8");
+        let response = decoder.decode(bytes.get_data()!);
+        let data = JSON.parse(response);
+        resolveFunc(data);
+      } else {
+        session!.send_and_read_finish(res);
+      }
     },
   );
 }
+
 // https://docs.bsky.app/docs/api/com-atproto-identity-resolve-handle
 export async function resolveHandleToDid(
   handle: string,
@@ -59,6 +65,7 @@ export async function resolveHandleToDid(
           reject(data);
         }
       },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
       [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
     );
   });
@@ -88,6 +95,7 @@ export async function getDidDocument(
         }
       },
       [Soup.Status.OK, Soup.Status.NOT_FOUND, Soup.Status.GONE],
+      [Soup.Status.OK, Soup.Status.NOT_FOUND, Soup.Status.GONE],
     );
   });
 }
@@ -102,6 +110,7 @@ export function getAtprotoPds(didDoc: AT.DidDocument): string {
     throw new Error("No ATProtocol PDS found in DID document");
   }
 }
+
 //https://docs.bsky.app/docs/api/com-atproto-server-create-session
 export async function createSession(
   server: string,
@@ -133,6 +142,40 @@ export async function createSession(
         }
       },
       [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+    );
+  });
+}
+export async function putPreferences(
+  server: string,
+  session: Soup.Session,
+  accessJwt: string,
+  prefs: object,
+) {
+  const message: Soup.Message = Soup.Message.new(
+    "POST",
+    server + "/xrpc/app.bsky.notification.putPreferences",
+  );
+  const encoder = new TextEncoder();
+  message.requestHeaders.append("authorization", `Bearer ${accessJwt}`);
+  message.set_request_body_from_bytes(
+    "application/json",
+    GLib.Bytes.new(encoder.encode(JSON.stringify(prefs))),
+  );
+  return new Promise((resolve, reject) => {
+    load_json_async(
+      session,
+      message,
+      "putPreferences",
+      (data: any) => {
+        if (!data.error) {
+          resolve(data);
+        } else {
+          reject(data);
+        }
+      },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+      [Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
     );
   });
 }

@@ -96,3 +96,32 @@ export function isComAtprotoError(obj: any): obj is ResponseError {
 
   return hasError && hasMessage;
 }
+
+export enum Notification {
+  Like = "like",
+  Repost = "repost",
+  Follow = "follow",
+  Mention = "mention",
+  Reply = "reply",
+  Quote = "quote",
+  StarterpackJoined = "starterpack-joined",
+}
+
+export type AppBskyNotification = {
+  uri: string; //at-uri
+  cid: string; // cid
+  author: object; // author obj
+  reason: Notification;
+  reasonSubject: string; //at-uri
+  record: object;
+  isRead: boolean;
+  indexedAt: string; //date-time
+  labels: object[];
+};
+
+export type AppBskyNotificationListNotifications = {
+  cursor: string;
+  notifications: AppBskyNotification[];
+  priority: boolean;
+  seenAt: string; //date-time
+};

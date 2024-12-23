@@ -106,6 +106,7 @@ export async function getOauthProtectedResource(
         }
       },
       [Soup.Status.OK],
+      [Soup.Status.OK],
     );
   });
 }
@@ -133,6 +134,7 @@ export async function resolveOauthServerMetadata(
           reject(data);
         }
       },
+      [Soup.Status.OK],
       [Soup.Status.OK],
     );
   });

@@ -44,6 +44,7 @@ export default class BlueskyNotifsForGnome extends Extension {
   tokenurl: string = "";
   redirecturl: string = "";
   baseurl: string = "";
+  atprotoSession: any;
 
   async enable() {
     this.gsettings = this.getSettings();
@@ -82,14 +83,25 @@ export default class BlueskyNotifsForGnome extends Extension {
       await OAuth.getOauthProtectedResource(this.pds, session)
     ).authorization_servers[0];
     console.log("authServer: " + authServer);
-    const atpSession = new NotifsAgent();
-    await atpSession.login(
+    this.atprotoSession = new NotifsAgent();
+    await this.atprotoSession.login(
       authServer,
       session,
       this.identifier,
       this.appPassword,
     );
-    console.log(JSON.stringify(atpSession.session));
+    console.log(JSON.stringify(this.atprotoSession.session));
+
+    this.gsettings.connect(
+      "changed::prioritynotifications",
+      async (settings, key) => {
+        await this.atprotoSession
+          .putPreferences(authServer, session, settings.get_boolean(key))
+          .catch((error: Soup.Status) => {
+            console.log("putPreferences error: " + error);
+          });
+      },
+    );
     // let atpSession = await API.createSession(
     //   authServer,
     //   session,
@@ -104,5 +116,6 @@ export default class BlueskyNotifsForGnome extends Extension {
 
   disable() {
     this.gsettings = undefined;
+    this.atprotoSession = undefined;
   }
 }
