@@ -31,6 +31,7 @@ export function load_json_async(
         let decoder = new TextDecoder("utf-8");
         let response = decoder.decode(bytes.get_data()!);
         let data = JSON.parse(response);
+        console.log("data: " + JSON.stringify(data));
         resolveFunc(data);
       } else {
         session!.send_and_read_finish(res);
@@ -146,6 +147,73 @@ export async function createSession(
     );
   });
 }
+export async function getServiceAuth(
+  server: string,
+  session: Soup.Session,
+  accessJwt: string,
+  params: object,
+): Promise<AT.AppBskyAuthToken> {
+  const message: Soup.Message = Soup.Message.new_from_encoded_form(
+    "GET",
+    server + "/xrpc/com.atproto.server.getServiceAuth",
+    Soup.form_encode_hash(params),
+  );
+  message.requestHeaders.append("authorization", `Bearer ${accessJwt}`);
+  return new Promise((resolve, reject) => {
+    load_json_async(
+      session,
+      message,
+      "getServiceAuth",
+      (data: any) => {
+        if (!data.error && AT.isAppBskyAuthToken(data)) {
+          resolve(data as AT.AppBskyAuthToken);
+        } else {
+          reject(data as AT.ResponseError);
+        }
+      },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+    );
+  });
+}
+
+export async function listNotifications(
+  server: string,
+  session: Soup.Session,
+  accessJwt: string,
+  params: object,
+): Promise<AT.AppBskyNotificationListNotifications> {
+  const message: Soup.Message = Soup.Message.new(
+    "GET",
+    server + "/xrpc/app.bsky.notification.listNotifications",
+  );
+  message.requestHeaders.append("authorization", `Bearer ${accessJwt}`);
+  const encoder = new TextEncoder();
+  message.set_request_body_from_bytes(
+    "application/json",
+    GLib.Bytes.new(encoder.encode(JSON.stringify(params))),
+  );
+  return new Promise((resolve, reject) => {
+    load_json_async(
+      session,
+      message,
+      "listNotifications",
+      (data: any) => {
+        if (
+          !data.error /*&& AT.isAppBskyNotificationListNotifications(data)*/
+        ) {
+          console.warn("listNotifications data: " + JSON.stringify(data));
+          resolve(data as AT.AppBskyNotificationListNotifications);
+        } else {
+          reject(data as AT.ResponseError);
+        }
+      },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+    );
+  });
+}
+
 export async function putPreferences(
   server: string,
   session: Soup.Session,

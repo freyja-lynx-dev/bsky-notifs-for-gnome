@@ -1,10 +1,10 @@
-import GLib from "gi://GLib";
 import Gio from "gi://Gio";
-import Meta from "gi://Meta";
-import Shell from "gi://Shell";
 import Soup from "gi://Soup";
+import St from "gi://St";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+import * as MessageTray from "resource:///org/gnome/shell/ui/messageTray.js";
+import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as API from "./lib/api.js";
 import * as AT from "./lib/types.js";
 import * as OAuth from "./lib/oauth.js";
@@ -45,6 +45,8 @@ export default class BlueskyNotifsForGnome extends Extension {
   redirecturl: string = "";
   baseurl: string = "";
   atprotoSession: any;
+  _indicator: any;
+  cursor: string = "";
 
   async enable() {
     this.gsettings = this.getSettings();
@@ -66,7 +68,7 @@ export default class BlueskyNotifsForGnome extends Extension {
       .catch((error) => {
         throw new Error("resolveHandleToDid error: " + JSON.stringify(error));
       });
-    console.log("this.did: " + this.did);
+    // console.log("this.did: " + this.did);
     // resolve DID to DID document to obtain PDS
     await API.getDidDocument(this.did, session)
       .then((didDocObj) => {
@@ -76,13 +78,13 @@ export default class BlueskyNotifsForGnome extends Extension {
       .catch((error) => {
         throw new Error("getDidDocument error: " + JSON.stringify(error));
       });
-    console.log("didDocument: " + JSON.stringify(this.didDocument));
-    console.log("pds: " + this.pds);
+    // console.log("didDocument: " + JSON.stringify(this.didDocument));
+    // console.log("pds: " + this.pds);
     // create ATPSession
     const authServer = (
       await OAuth.getOauthProtectedResource(this.pds, session)
     ).authorization_servers[0];
-    console.log("authServer: " + authServer);
+    // console.log("authServer: " + authServer);
     this.atprotoSession = new NotifsAgent();
     await this.atprotoSession.login(
       authServer,
@@ -90,7 +92,8 @@ export default class BlueskyNotifsForGnome extends Extension {
       this.identifier,
       this.appPassword,
     );
-    console.log(JSON.stringify(this.atprotoSession.session));
+    console.log("bsky-notifs-for-gnome: successfully created session");
+    // console.log(JSON.stringify(this.atprotoSession.session));
 
     this.gsettings.connect(
       "changed::prioritynotifications",
@@ -102,20 +105,67 @@ export default class BlueskyNotifsForGnome extends Extension {
           });
       },
     );
-    // let atpSession = await API.createSession(
-    //   authServer,
-    //   session,
-    //   this.identifier,
-    //   this.appPassword,
-    // ).catch((error) => {
-    //   throw new Error("createSession error: " + JSON.stringify(error));
-    // });
+    this._indicator = new PanelMenu.Button(0.0, "Bluesky Notifs", false);
+    const icon = new St.Icon({
+      icon_name: "face-laugh-symbolic",
+      style_class: "system-status-icon",
+    });
+    this._indicator.add_child(icon);
+    Main.panel.addToStatusArea(this.uuid, this._indicator);
+
     // get notifications from PDS
-    // send notifications to Gnome Shell
+    this._indicator.connect("button-press-event", async () => {
+      console.log("bsky-notifs-for-gnome: pulling notifications");
+      const authToken = await API.getServiceAuth(
+        authServer,
+        session,
+        this.atprotoSession.session.accessJwt,
+        {
+          aud: this.did,
+          lxm: "com.atproto.server.listNotifications",
+        },
+      );
+      await API.listNotifications(
+        authServer,
+        session,
+        this.atprotoSession.session.accessJwt,
+        {
+          limit: this.maxNotifications,
+          priority: this.priorityNotifications,
+          cursor: this.cursor,
+          seenAt: "",
+        },
+      )
+        .then((notifications: AT.AppBskyNotificationListNotifications) => {
+          console.log("bsky-notifs-for-gnome: got notifications");
+          console.log(JSON.stringify(notifications));
+          // send notifications to Gnome Shell
+        })
+        .catch((error: AT.ResponseError) => {
+          console.log(`bsky-notifs-for-gnome error: ${JSON.stringify(error)}`);
+        });
+      // await this.atprotoSession
+      //   .listNotifications(authServer, session, {
+      //     limit: this.maxNotifications,
+      //     priority: this.priorityNotifications,
+      //     cursor: this.cursor,
+      //     seenAt: "",
+      //   })
+      //   .then((notifications: AT.AppBskyNotificationListNotifications) => {
+      //     console.log("bsky-notifs-for-gnome: got notifications");
+      //     console.log(JSON.stringify(notifications));
+      //     // send notifications to Gnome Shell
+      //   })
+      //   .catch((error: AT.ResponseError) => {
+      //     console.log(`bsky-notifs-for-gnome error: ${JSON.stringify(error)}`);
+      //   });
+    });
   }
 
   disable() {
     this.gsettings = undefined;
     this.atprotoSession = undefined;
+    this._indicator?.destroy();
+    this._indicator = null;
   }
 }

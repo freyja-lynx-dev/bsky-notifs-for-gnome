@@ -118,6 +118,28 @@ export type AppBskyNotification = {
   indexedAt: string; //date-time
   labels: object[];
 };
+export function isAppBskyNotification(obj: any): obj is AppBskyNotification {
+  const hasUri = obj.uri !== undefined;
+  const hasCid = obj.cid !== undefined;
+  const hasAuthor = obj.author !== undefined;
+  const hasReason = obj.reason !== undefined;
+  const hasReasonSubject = obj.reasonSubject !== undefined;
+  const hasRecord = obj.record !== undefined;
+  const hasIsRead = obj.isRead !== undefined;
+  const hasIndexedAt = obj.indexedAt !== undefined;
+  const hasLabels = obj.labels !== undefined;
+  return (
+    hasUri &&
+    hasCid &&
+    hasAuthor &&
+    hasReason &&
+    hasReasonSubject &&
+    hasRecord &&
+    hasIsRead &&
+    hasIndexedAt &&
+    hasLabels
+  );
+}
 
 export type AppBskyNotificationListNotifications = {
   cursor: string;
@@ -125,3 +147,20 @@ export type AppBskyNotificationListNotifications = {
   priority: boolean;
   seenAt: string; //date-time
 };
+export function isAppBskyNotificationListNotifications(
+  obj: any,
+): obj is AppBskyNotificationListNotifications {
+  const hasCursor = obj.cursor !== undefined;
+  const hasNotifications = obj.notifications !== undefined;
+  const hasPriority = obj.priority !== undefined;
+  const hasSeenAt = obj.seenAt !== undefined;
+
+  return hasCursor && hasNotifications && hasPriority && hasSeenAt;
+}
+
+export type AppBskyAuthToken = {
+  token: string;
+};
+export function isAppBskyAuthToken(obj: any): obj is AppBskyAuthToken {
+  return obj.token !== undefined;
+}

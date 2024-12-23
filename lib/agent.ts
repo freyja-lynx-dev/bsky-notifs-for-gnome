@@ -31,20 +31,18 @@ export class NotifsAgent {
       console.log("agent::putPreferences error: " + JSON.stringify(error));
     });
   }
-  // async getNotifications( server: string,
-  //   session: Soup.Session,
-  //   handle: string,
-  //   pass: string,
-  //   cursor: string,
-  // ): Promise<AT.AppBskyNotificationListNotifications> {
-  //   return await API.getNotifications(
-  //     server,
-  //     this.session,
-  //     this.session.handle,
-  //     this.session.accessJwt,
-  //     cursor,
-  //   ).catch((error: AT.ResponseError) => {
-  //     throw new Error("getNotifications error: " + JSON.stringify(error));
-  //   });
-  // }
+  async listNotifications(
+    server: string,
+    session: Soup.Session,
+    params: object,
+  ): Promise<AT.AppBskyNotificationListNotifications> {
+    return await API.listNotifications(
+      server,
+      session,
+      this.session.accessJwt,
+      params,
+    ).catch((error: AT.ResponseError) => {
+      throw new Error("listNotifications error: " + JSON.stringify(error));
+    });
+  }
 }
