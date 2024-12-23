@@ -149,7 +149,7 @@ const state = () => {
     values[i] = GLib.random_int_range(0, 255);
   }
 
-  return decoder.decode(values);
+  return GLib.base64_encode(values);
 };
 
 // https://atproto.com/specs/oauth#clients
