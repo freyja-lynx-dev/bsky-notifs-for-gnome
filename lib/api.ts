@@ -15,7 +15,6 @@ export function load_json_async(
   resolveFunc: Function,
   responses: Array<Soup.Status>,
 ) {
-  console.log("message: " + message.get_uri());
   session.send_and_read_async(
     message,
     GLib.PRIORITY_DEFAULT,
@@ -93,7 +92,7 @@ export async function getDidDocument(
   });
 }
 
-export function getAtprotoPdsFromService(didDoc: AT.DidDocument): string {
+export function getAtprotoPds(didDoc: AT.DidDocument): string {
   const service = didDoc.service.filter(
     (service: AT.DidDocumentService) => service.id === "#atproto_pds",
   );
@@ -109,7 +108,7 @@ export async function createSession(
   session: Soup.Session,
   handle: string,
   pass: string,
-): Promise<AT.ComAtprotoServerCreateSession> {
+): Promise<AT.AtprotoSession> {
   const params = `{"identifier":"${handle}","password":"${pass}"}`;
   const message: Soup.Message = Soup.Message.new(
     "POST",
@@ -127,8 +126,8 @@ export async function createSession(
       message,
       "createSession",
       (data: any) => {
-        if (!data.error && AT.isComAtprotoServerCreateSession(data)) {
-          resolve(data as AT.ComAtprotoServerCreateSession);
+        if (!data.error && AT.isAtprotoSession(data)) {
+          resolve(data as AT.AtprotoSession);
         } else {
           reject(data as AT.ResponseError);
         }

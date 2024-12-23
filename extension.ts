@@ -8,6 +8,7 @@ import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 import * as API from "./lib/api.js";
 import * as AT from "./lib/types.js";
 import * as OAuth from "./lib/oauth.js";
+import { NotifsAgent } from "./lib/agent.js";
 
 // function checkDepdendencies() {
 //   const proc = Gio.Subprocess.new(
@@ -69,7 +70,7 @@ export default class BlueskyNotifsForGnome extends Extension {
     await API.getDidDocument(this.did, session)
       .then((didDocObj) => {
         this.didDocument = didDocObj;
-        this.pds = API.getAtprotoPdsFromService(didDocObj);
+        this.pds = API.getAtprotoPds(didDocObj);
       })
       .catch((error) => {
         throw new Error("getDidDocument error: " + JSON.stringify(error));
@@ -81,15 +82,22 @@ export default class BlueskyNotifsForGnome extends Extension {
       await OAuth.getOauthProtectedResource(this.pds, session)
     ).authorization_servers[0];
     console.log("authServer: " + authServer);
-    let atpSession = await API.createSession(
+    const atpSession = new NotifsAgent();
+    await atpSession.login(
       authServer,
       session,
       this.identifier,
       this.appPassword,
-    ).catch((error) => {
-      throw new Error("createSession error: " + JSON.stringify(error));
-    });
-    console.log(JSON.stringify(atpSession));
+    );
+    console.log(JSON.stringify(atpSession.session));
+    // let atpSession = await API.createSession(
+    //   authServer,
+    //   session,
+    //   this.identifier,
+    //   this.appPassword,
+    // ).catch((error) => {
+    //   throw new Error("createSession error: " + JSON.stringify(error));
+    // });
     // get notifications from PDS
     // send notifications to Gnome Shell
   }

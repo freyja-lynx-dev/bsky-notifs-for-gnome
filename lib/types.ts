@@ -65,7 +65,7 @@ function isDidDocumentVerificationMethod(
   return hasId && hasType && hasController && hasPublicKeyMultibase;
 }
 
-export type ComAtprotoServerCreateSession = {
+export type AtprotoSession = {
   accessJwt: string;
   refreshJwt: string;
   handle: string;
@@ -77,9 +77,7 @@ export type ComAtprotoServerCreateSession = {
   active?: boolean;
   status?: "takendown" | "suspended" | "deactivated";
 };
-export function isComAtprotoServerCreateSession(
-  obj: any,
-): obj is ComAtprotoServerCreateSession {
+export function isAtprotoSession(obj: any): obj is AtprotoSession {
   const hasAccessJwt = obj.accessJwt !== undefined;
   const hasRefreshJwt = obj.refreshJwt !== undefined;
   const hasHandle = obj.handle !== undefined;
