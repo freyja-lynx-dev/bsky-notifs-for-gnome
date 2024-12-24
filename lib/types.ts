@@ -164,3 +164,64 @@ export type AppBskyAuthToken = {
 export function isAppBskyAuthToken(obj: any): obj is AppBskyAuthToken {
   return obj.token !== undefined;
 }
+
+export type AppBskyAuthor = {
+  did: string;
+  handle: string;
+  displayName: string;
+  description: string;
+  avatar: string;
+  associated: object;
+  indexedAt: string;
+  createdAt: string;
+};
+export function isAppBskyAuthor(obj: any): obj is AppBskyAuthor {
+  const hasDid = obj.did !== undefined;
+  const hasHandle = obj.handle !== undefined;
+  const hasDisplayName = obj.displayName !== undefined;
+  const hasDescription = obj.description !== undefined;
+  const hasAvatar = obj.avatar !== undefined;
+  const hasAssociated = obj.associated !== undefined;
+  const hasIndexedAt = obj.indexedAt !== undefined;
+  const hasCreatedAt = obj.createdAt !== undefined;
+
+  return (
+    hasDid &&
+    hasHandle &&
+    hasDisplayName &&
+    hasDescription &&
+    hasAvatar &&
+    hasAssociated &&
+    hasIndexedAt &&
+    hasCreatedAt
+  );
+}
+
+export type AppBskyNotifRecord = {
+  $type: string;
+  createdAt: string;
+  subject: object;
+};
+
+export type ComAtprotoRepoGetRecord = {
+  uri: string;
+  cid: string;
+  value: object;
+};
+export function isComAtprotoRepoGetRecord(
+  obj: any,
+): obj is ComAtprotoRepoGetRecord {
+  const hasUri = obj.uri !== undefined;
+  const hasCid = obj.cid !== undefined;
+  const hasValue = obj.value !== undefined;
+
+  return hasUri && hasCid && hasValue;
+}
+
+export type PostRecord = {
+  text: string;
+  $type: string;
+  langs: string[];
+  reply: object;
+  createdAt: string;
+};

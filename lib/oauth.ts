@@ -142,7 +142,6 @@ export async function resolveOauthServerMetadata(
 
 const state = () => {
   let values: Uint8Array = new Uint8Array(16);
-  const decoder = new TextDecoder();
   // this may or may not be a bad idea
   GLib.random_set_seed(GLib.get_real_time());
   for (let i = 0; i < 16; i++) {

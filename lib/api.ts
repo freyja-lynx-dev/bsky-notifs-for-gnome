@@ -31,7 +31,7 @@ export function load_json_async(
         let decoder = new TextDecoder("utf-8");
         let response = decoder.decode(bytes.get_data()!);
         let data = JSON.parse(response);
-        console.log("data: " + JSON.stringify(data));
+        //console.log("data: " + JSON.stringify(data));
         resolveFunc(data);
       } else {
         session!.send_and_read_finish(res);
@@ -244,6 +244,39 @@ export async function putPreferences(
       },
       [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
       [Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+    );
+  });
+}
+
+export async function getRecord(
+  did: string,
+  collection: string,
+  rkey: string,
+  session: Soup.Session,
+): Promise<AT.ComAtprotoRepoGetRecord> {
+  const message: Soup.Message = Soup.Message.new_from_encoded_form(
+    "GET",
+    "https://bsky.social/xrpc/com.atproto.repo.getRecord",
+    Soup.form_encode_hash({
+      repo: did,
+      collection: collection,
+      rkey: rkey,
+    }),
+  );
+  return new Promise((resolve, reject) => {
+    load_json_async(
+      session,
+      message,
+      "getRecord",
+      (data: any) => {
+        if (!data.error && AT.isComAtprotoRepoGetRecord(data)) {
+          resolve(data as AT.ComAtprotoRepoGetRecord);
+        } else {
+          reject(data as AT.ResponseError);
+        }
+      },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
     );
   });
 }
