@@ -32,6 +32,8 @@ export default class BlueskyNotifsForGnome extends Extension {
   checkIntervalMinutes: number = 30;
   maxNotifications: number = 50;
   priorityNotifications: boolean = false;
+  soupSession: Soup.Session | undefined = undefined;
+  authServer: string | undefined = undefined;
   did: string = "";
   didDocument: AT.DidDocument | undefined = {
     id: "",
@@ -132,10 +134,10 @@ export default class BlueskyNotifsForGnome extends Extension {
       "prioritynotifications",
     );
 
-    const session = new Soup.Session();
+    this.soupSession = new Soup.Session();
 
     // resolve handle to DID
-    await API.resolveHandleToDid(this.identifier, session)
+    await API.resolveHandleToDid(this.identifier, this.soupSession)
       .then((didObj) => {
         this.did = didObj.did;
       })
@@ -144,7 +146,7 @@ export default class BlueskyNotifsForGnome extends Extension {
       });
     // console.log("this.did: " + this.did);
     // resolve DID to DID document to obtain PDS
-    await API.getDidDocument(this.did, session)
+    await API.getDidDocument(this.did, this.soupSession)
       .then((didDocObj) => {
         this.didDocument = didDocObj;
         this.pds = API.getAtprotoPds(didDocObj);
@@ -155,14 +157,14 @@ export default class BlueskyNotifsForGnome extends Extension {
     // console.log("didDocument: " + JSON.stringify(this.didDocument));
     // console.log("pds: " + this.pds);
     // create ATPSession
-    const authServer = (
-      await OAuth.getOauthProtectedResource(this.pds, session)
+    this.authServer = (
+      await OAuth.getOauthProtectedResource(this.pds, this.soupSession)
     ).authorization_servers[0];
     // console.log("authServer: " + authServer);
     this.atprotoSession = new NotifsAgent();
     await this.atprotoSession.login(
-      authServer,
-      session,
+      this.authServer!,
+      this.soupSession,
       this.identifier,
       this.appPassword,
     );
@@ -181,7 +183,11 @@ export default class BlueskyNotifsForGnome extends Extension {
       "changed::prioritynotifications",
       async (settings, key) => {
         await this.atprotoSession
-          .putPreferences(authServer, session, settings.get_boolean(key))
+          .putPreferences(
+            this.authServer!,
+            this.soupSession,
+            settings.get_boolean(key),
+          )
           .catch((error: Soup.Status) => {
             console.log("putPreferences error: " + error);
           });
@@ -199,8 +205,8 @@ export default class BlueskyNotifsForGnome extends Extension {
     this._indicator.connect("button-press-event", async () => {
       console.log("bsky-notifs-for-gnome: pulling notifications");
       const authToken = await API.getServiceAuth(
-        authServer,
-        session,
+        this.authServer!,
+        this.soupSession!,
         this.atprotoSession.session.accessJwt,
         {
           aud: this.did,
@@ -208,8 +214,8 @@ export default class BlueskyNotifsForGnome extends Extension {
         },
       );
       await API.listNotifications(
-        authServer,
-        session,
+        this.authServer!,
+        this.soupSession!,
         this.atprotoSession.session.accessJwt,
         {
           limit: this.maxNotifications,
@@ -220,13 +226,13 @@ export default class BlueskyNotifsForGnome extends Extension {
       )
         .then((notifications: AT.AppBskyNotificationListNotifications) => {
           console.log("bsky-notifs-for-gnome: got notifications");
-          console.log(JSON.stringify(notifications));
+          // console.log(JSON.stringify(notifications));
           // send notifications to Gnome Shell
           Main.messageTray.add(this.getNotificationSource());
           notifications.notifications
             .slice(0, this.maxNotifications)
             .forEach((n: AT.AppBskyNotification) => {
-              this.makeNotification(n, session)
+              this.makeNotification(n, this.soupSession!)
                 .then((notification: MessageTray.Notification) => {
                   this.notificationSource.addNotification(notification);
                 })
@@ -258,9 +264,22 @@ export default class BlueskyNotifsForGnome extends Extension {
     });
   }
 
-  disable() {
+  async disable() {
     this.gsettings = undefined;
+    // cleanup session
+    await API.getServiceAuth(
+      this.authServer!,
+      this.soupSession!,
+      this.atprotoSession.session.accessJwt,
+      {
+        aud: this.did,
+        lxm: "com.atproto.server.deleteSession",
+      },
+    );
+    await this.atprotoSession.logout(this.authServer!, this.soupSession!);
     this.atprotoSession = undefined;
+    this.authServer = undefined;
+    this.soupSession = undefined;
     this._indicator?.destroy();
     this._indicator = undefined;
     this.notificationSource?.destroy();

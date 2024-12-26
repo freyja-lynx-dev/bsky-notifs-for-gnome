@@ -59,7 +59,6 @@ export async function resolveHandleToDid(
       message,
       "com.atproto.identity.resolveHandle",
       (data: any) => {
-        console.log(data);
         if (!data.error && AT.isComAtprotoIdentityResolveHandle(data)) {
           resolve(data as AT.ComAtprotoIdentityResolveHandle);
         } else {
@@ -147,6 +146,34 @@ export async function createSession(
     );
   });
 }
+export async function deleteSession(
+  server: string,
+  session: Soup.Session,
+  accessJwt: string,
+): Promise<void> {
+  const message: Soup.Message = Soup.Message.new(
+    "POST",
+    server + "/xrpc/com.atproto.server.deleteSession",
+  );
+  message.request_headers.append("Authorization", `Bearer ${accessJwt}`);
+  return new Promise((resolve, reject) => {
+    load_json_async(
+      session,
+      message,
+      "deleteSession",
+      (data: any) => {
+        if (!data.error) {
+          resolve(data);
+        } else {
+          reject(data as AT.ResponseError);
+        }
+      },
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+      [Soup.Status.OK, Soup.Status.BAD_REQUEST, Soup.Status.UNAUTHORIZED],
+    );
+  });
+}
+
 export async function getServiceAuth(
   server: string,
   session: Soup.Session,
